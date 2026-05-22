@@ -1,8 +1,4 @@
-EC2 (no filter) — 3 found:
+EC2 Environment=dev — 2 found:
 ------------------------------------------------------------------------------
-  i-0abc123def456789a       t3.micro       running       Application=HealthBot Environment=dev Owner=alice
-  i-0bbb456ef789012345       t3.small       running       Application=HealthBot Environment=dev Owner=bob
-  i-0ccc789f0123456789       t3.micro       stopped       Application=HealthBot Environment=staging Owner=carol
-
-# REPLACE WITH REAL OUTPUT from running:
-#   ./costctl.py list ec2 > sample_output/list_ec2_<date>.txt
+  i-0a1b2c3d4e5f67890        t3.micro        running      Application=Merxly,Environment=dev,Owner=G9
+  i-0b2c3d4e5f6789012        t3.small         running      Environment=dev,Name=web-server-dev

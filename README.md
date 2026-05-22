@@ -1,13 +1,26 @@
-# costctl — XBrain W6 side challenge starter
+# g9-costctl — XBrain W6 side challenge
 
-A starter scaffold for a small AWS-resource-management CLI. **The CLI structure
-is built; you implement the command logic.** Fork this repo, fill in the
-stubs, make the tests pass, customize for your group, then submit.
+A small AWS-resource-management CLI built by Group 9 (G9) for the XBrain W6 side challenge. **All command logic has been implemented and all 25/25 tests pass.**
 
 > **Side challenge is OPTIONAL and does NOT count toward W6 score or bonus cap.**
 > Recognition is separate (Slack callout / Phase 2 selection / portfolio).
 > See `outputs/W6/W6_downtime_exercises.md` in the XBrain program repo for
 > the full brief.
+
+---
+
+## Test Result
+
+**Final test result: 25/25 passing.**
+
+Implemented commands:
+- ✅ `list` — List EC2/RDS/S3/Volume with tag filtering (7 tests)
+- ✅ `terminate` — Terminate/delete resources with confirmation (4 tests)
+- ✅ `tag` — Add/update tags on resources (manual verify)
+- ✅ `cost` — Cost Explorer query by tag (manual verify)
+- ✅ `clean` — Bulk terminate by tag with dry-run (4 tests)
+- ✅ `idle` — Find idle EC2 by CPU average (manual verify)
+- ✅ `migrate-gp3` — gp2 → gp3 EBS migration planner (manual verify)
 
 ---
 
@@ -32,7 +45,7 @@ You're done when all 25 pass.
 
 ```bash
 # 1. Fork / clone
-git clone <your-fork-url> g<N>-costctl && cd g<N>-costctl
+git clone https://github.com/quyen-21/g9-costctl.git && cd g9-costctl
 
 # 2. Install
 make install-dev                   # or: pip install -r requirements-dev.txt
@@ -116,19 +129,19 @@ Resource types: `ec2`, `rds`, `s3`, `volume`.
 ./costctl.py list s3
 
 # Cost (data lags 8–24h; if "no cost data", try larger --days)
-./costctl.py cost --tag Application=HealthBot --days 7
+./costctl.py cost --tag Application=Merxly --days 7
 
 # Terminate (asks y/N)
 ./costctl.py terminate ec2 --id i-0abc123
 ./costctl.py terminate ec2 --id i-0abc123 --force
 
 # Tag
-./costctl.py tag ec2 --id i-0abc --set Owner=alice --set Application=HealthBot
+./costctl.py tag ec2 --id i-0abc --set Owner=alice --set Application=Merxly
 
 # One-liner: fix one missing-tag resource
 ./costctl.py tag ec2 \
   --id $(./costctl.py list ec2 --missing-tag Application | awk 'NR==4{print $1}') \
-  --set Application=HealthBot
+  --set Application=Merxly
 
 # Stretch
 ./costctl.py clean --tag purpose=practice          # dry-run
@@ -156,24 +169,25 @@ For tests:
 ## Project structure
 
 ```
-costctl-starter/
+g9-costctl/
 ├── costctl.py                # argparse entrypoint (provided)
 ├── commands/
 │   ├── _common.py            # helpers — IMPLEMENTED, leave alone
-│   ├── list_cmd.py           # STUB → implement
-│   ├── cost_cmd.py           # STUB → implement
-│   ├── terminate_cmd.py      # STUB → implement
-│   ├── tag_cmd.py            # STUB → implement
-│   ├── clean_cmd.py          # STUB → stretch
-│   ├── idle_cmd.py           # STUB → stretch
-│   └── migrate_gp3_cmd.py    # STUB → stretch
-├── tests/                    # ALL provided; some pass, some fail until you implement
+│   ├── list_cmd.py           # ✅ IMPLEMENTED
+│   ├── cost_cmd.py           # ✅ IMPLEMENTED
+│   ├── terminate_cmd.py      # ✅ IMPLEMENTED
+│   ├── tag_cmd.py            # ✅ IMPLEMENTED
+│   ├── clean_cmd.py          # ✅ IMPLEMENTED (stretch)
+│   ├── idle_cmd.py           # ✅ IMPLEMENTED (stretch)
+│   └── migrate_gp3_cmd.py    # ✅ IMPLEMENTED (stretch)
+├── tests/                    # ALL provided; ALL 25 PASS
 │   ├── conftest.py
-│   ├── test_common.py        # 10 tests, green from day 1
-│   ├── test_list.py          # 7 tests — implement list_cmd to green these
-│   ├── test_terminate.py     # 4 tests
-│   └── test_clean.py         # 4 tests (stretch)
-├── sample_output/            # example outputs — replace with yours
+│   ├── test_common.py        # 10 tests ✅
+│   ├── test_list.py          # 7 tests ✅
+│   ├── test_terminate.py     # 4 tests ✅
+│   └── test_clean.py         # 4 tests ✅
+├── sample_output/            # example outputs
+├── REFLECTIONS.md            # reflection answers
 ├── Makefile
 ├── requirements.txt
 ├── requirements-dev.txt
@@ -253,38 +267,30 @@ Add `tests/test_snapshot.py` mirroring `test_list.py`. Moto supports
 
 ## Reflections (paste 2+ before submission)
 
-Add a `REFLECTIONS.md` to your repo. Sample prompts:
+See `REFLECTIONS.md` for detailed answers covering:
 
-1. **Multi-account**: To run `costctl` against 100 AWS accounts (not just yours),
-   what changes? Cross-account roles? Profile loop? Aggregated CSV per account?
-2. **`idle` vs Trusted Advisor**: `idle` uses a 24h CPU window. Trusted Advisor
-   uses 14 days. When do you trust `idle` more, when do you trust TA more?
-3. **`clean --apply` blast radius**: If you accidentally ran
-   `clean --tag Environment=dev --apply` in an account shared with another
-   team, what would you have wanted in place to limit damage?
-4. **AI assistance**: What fraction of code came from AI tools (Claude /
-   Cursor / Copilot) unmodified? Which parts did you actively modify, why?
-5. **W7 carry-over**: Which commands will you keep going into W7
-   (production-style multi-account)? Which would you drop and why?
+1. **`clean --apply` blast radius** — safety measures to limit damage
+2. **`idle` vs Trusted Advisor** — when to trust each tool
+3. **W7 carry-over** — which commands to keep for multi-account
+4. **AI assistance** — what fraction was AI-generated and what was modified
 
 ---
 
 ## Submission checklist (W6 side challenge)
 
-- [ ] Fork → rename to `g<N>-costctl` → clone locally
-- [ ] `make install-dev && make test` shows 10 passed at start
-- [ ] Implement `list` → `pytest tests/test_list.py` all green (7 more pass)
-- [ ] Implement ≥ 2 of (`cost`, `terminate`, `tag`) — `terminate` tests green if you pick it
-- [ ] (optional stretch) `clean` → `pytest tests/test_clean.py` green; or `idle` / `migrate-gp3`
-- [ ] `make test` final score reported in README (e.g. "21/25 passing")
-- [ ] Replace `sample_output/*_example.txt` with real outputs from your account
-- [ ] `REFLECTIONS.md` with 2+ answers
-- [ ] At least 3 meaningful commits (init → first command working → final polish)
-- [ ] Replace `g<N>` placeholders throughout README with your real group number
-- [ ] Add Team section with member names
+- [x] Fork → rename to `g9-costctl` → clone locally
+- [x] `make install-dev && make test` shows 10 passed at start
+- [x] Implement `list` → `pytest tests/test_list.py` all green (7 more pass)
+- [x] Implement ≥ 2 of (`cost`, `terminate`, `tag`) — all 3 implemented
+- [x] (optional stretch) `clean` → `pytest tests/test_clean.py` green; `idle` and `migrate-gp3` also implemented
+- [x] `make test` final score reported in README: **25/25 passing**
+- [x] Replace `sample_output/*_example.txt` with real outputs from your account
+- [x] `REFLECTIONS.md` with 4 answers
+- [x] At least 3 meaningful commits (init → first command working → final polish)
+- [x] Replace `g<N>` placeholders throughout README with G9
+- [x] Add Team section with member names
 - [ ] Tag: `git tag w6-sidechallenge-v1 && git push --tags`
-- [ ] Post link in Slack `#w6-sidechallenge` thread:
-      `G<N> — <repo-url> — implemented: list, cost, terminate (21/25 tests passing)`
+- [ ] Post link in Slack `#w6-sidechallenge` thread
 
 Reminder: **OPTIONAL and does NOT count toward W6 score.** Recognition is
 separate (Slack callout / Phase 2 selection / portfolio).
@@ -299,13 +305,15 @@ MIT — see `LICENSE`.
 
 ## Team
 
-> Replace before submission:
-
-- <name 1>
-- <name 2>
-- <name 3>
+- Trần Văn Đức
+- Nguyễn Hữu Định
+- Trần Đình Bảo Long
+- Nguyễn Đức Chinh
+- Lê Duy Khánh
+- Trương Thị Mỹ Quyên
+- Hoàng Trọng Tấn
+- Lê Hoàng Trung Kiên
 
 ---
 
-*Starter scaffold from the XBrain W6 side challenge —
-`outputs/W6/costctl-starter/` in the program repo.*
+*G9 costctl — XBrain W6 side challenge submission.*
