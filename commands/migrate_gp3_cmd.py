@@ -70,6 +70,26 @@ import boto3
 # us-east-1 on-demand pricing per GB-month. Override if you care about exact $.
 GP2_PRICE = 0.10
 GP3_PRICE = 0.08
+PRICE_DELTA = GP2_PRICE - GP3_PRICE
+
+
+def _get_attached_instance(volume):
+    """Return the instance ID attached to this volume, or '(none)'."""
+    attachments = volume.get("Attachments", [])
+    if attachments:
+        return attachments[0].get("InstanceId", "(none)")
+    return "(none)"
+
+
+def _get_gp2_volumes(ec2):
+    """Return list of gp2 volume dicts."""
+    volumes = []
+    paginator = ec2.get_paginator("describe_volumes")
+    for page in paginator.paginate(
+        Filters=[{"Name": "volume-type", "Values": ["gp2"]}]
+    ):
+        volumes.extend(page.get("Volumes", []))
+    return volumes
 
 
 def run(args):
@@ -79,4 +99,50 @@ def run(args):
         args.apply       — bool, default False (dry-run)
         args.volume_id   — optional str, only migrate this volume when --apply
     """
-    raise NotImplementedError("TODO: implement migrate-gp3 — see module docstring")
+    ec2 = boto3.client("ec2")
+    volumes = _get_gp2_volumes(ec2)
+
+    if not volumes:
+        print("No gp2 volumes found.")
+        return
+
+    if not args.apply:
+        # Dry-run mode
+        print(f"gp2 volumes (price delta ${PRICE_DELTA:.3f}/GB-month):")
+        print("-" * 78)
+
+        total_savings = 0.0
+        for vol in volumes:
+            vid = vol["VolumeId"]
+            size = vol.get("Size", 0)
+            attached = _get_attached_instance(vol)
+            savings = size * PRICE_DELTA
+
+            total_savings += savings
+            print(f"  {vid:<28} {size:>5}GB  attached={attached:<20} ${savings:.2f}/mo savings")
+
+        print("-" * 78)
+        print(f"\n  Total potential savings: ${total_savings:.2f}/mo")
+        print("\n(dry-run — pass --apply --volume-id <id> to migrate one, or --apply to migrate ALL)")
+        return
+
+    # Apply mode
+    targets = volumes
+    if args.volume_id:
+        targets = [v for v in volumes if v["VolumeId"] == args.volume_id]
+        if not targets:
+            print(f"Volume {args.volume_id} not found or not gp2.")
+            return
+
+    for vol in targets:
+        vid = vol["VolumeId"]
+        ec2.modify_volume(
+            VolumeId=vid,
+            VolumeType="gp3",
+            Iops=3000,
+            Throughput=125,
+        )
+        print(f"  → modify_volume issued for {vid} (gp3, 3000 IOPS, 125 MiB/s)")
+
+    print(f"\nVolume(s) entering 'modifying' → 'optimizing' state. App stays online.")
+    print("Use `costctl list volume` after ~30 minutes to confirm 'in-use' + gp3.")
