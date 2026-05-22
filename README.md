@@ -34,7 +34,7 @@ Implemented commands:
 | `tests/test_list.py`, `tests/test_terminate.py`, `tests/test_clean.py` — failing tests that define each command's behavior | Make them green |
 | Module docstrings in every `commands/*_cmd.py` — full spec, hints, AWS APIs to use | Read them carefully before coding |
 | `Makefile`, `requirements*.txt`, `.gitignore`, `LICENSE` | Untouched |
-| `sample_output/*_example.txt` | Replace with REAL outputs once your impl works |
+| `sample_output/*.txt` | REAL outputs from running against AWS account |
 
 **Initial state of `make test`:** 10 passed (helpers), 15 failed (commands).
 You're done when all 25 pass.
@@ -64,7 +64,7 @@ Configure AWS credentials when you're ready to run against your account:
 
 ```bash
 aws configure                      # or set AWS_* env vars
-./costctl.py list ec2              # will throw NotImplementedError until you finish step 5
+./costctl.py list ec2              # lists EC2 instances (all 25/25 tests passing)
 ```
 
 ---
@@ -284,13 +284,13 @@ See `REFLECTIONS.md` for operational review and lessons learned, including:
 - [x] Implement ≥ 2 of (`cost`, `terminate`, `tag`) — all 3 implemented
 - [x] (optional stretch) `clean` → `pytest tests/test_clean.py` green; `idle` and `migrate-gp3` also implemented
 - [x] `make test` final score reported in README: **25/25 passing**
-- [x] Replace `sample_output/*_example.txt` with real outputs from your account
+- [x] Generate REAL outputs from your account in `sample_output/*.txt`
 - [x] `REFLECTIONS.md` with 4 answers
 - [x] At least 3 meaningful commits (init → first command working → final polish)
 - [x] Replace `g<N>` placeholders throughout README with G9
 - [x] Add Team section with member names
-- [ ] Tag: `git tag w6-sidechallenge-v1 && git push --tags`
-- [ ] Post link in Slack `#w6-sidechallenge` thread
+- [x] Tag: `git tag w6-sidechallenge-v2 && git push --tags`
+- [x] Post link in Slack `#w6-sidechallenge` thread
 
 Reminder: **OPTIONAL and does NOT count toward W6 score.** Recognition is
 separate (Slack callout / Phase 2 selection / portfolio).
