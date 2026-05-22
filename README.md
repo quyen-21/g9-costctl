@@ -14,13 +14,13 @@ A small AWS-resource-management CLI built by Group 9 (G9) for the XBrain W6 side
 **Final test result: 25/25 passing.**
 
 Implemented commands:
-- ✅ `list` — List EC2/RDS/S3/Volume with tag filtering (7 tests)
-- ✅ `terminate` — Terminate/delete resources with confirmation (4 tests)
-- ✅ `tag` — Add/update tags on resources (manual verify)
-- ✅ `cost` — Cost Explorer query by tag (manual verify)
-- ✅ `clean` — Bulk terminate by tag with dry-run (4 tests)
-- ✅ `idle` — Find idle EC2 by CPU average (manual verify)
-- ✅ `migrate-gp3` — gp2 → gp3 EBS migration planner (manual verify)
+-  `list` — List EC2/RDS/S3/Volume with tag filtering (7 tests)
+-  `terminate` — Terminate/delete resources with confirmation (4 tests)
+-  `tag` — Add/update tags on resources (manual verify)
+-  `cost` — Cost Explorer query by tag (manual verify)
+-  `clean` — Bulk terminate by tag with dry-run (4 tests)
+-  `idle` — Find idle EC2 by CPU average (manual verify)
+-  `migrate-gp3` — gp2 → gp3 EBS migration planner (manual verify)
 
 ---
 
@@ -173,19 +173,19 @@ g9-costctl/
 ├── costctl.py                # argparse entrypoint (provided)
 ├── commands/
 │   ├── _common.py            # helpers — IMPLEMENTED, leave alone
-│   ├── list_cmd.py           # ✅ IMPLEMENTED
-│   ├── cost_cmd.py           # ✅ IMPLEMENTED
-│   ├── terminate_cmd.py      # ✅ IMPLEMENTED
-│   ├── tag_cmd.py            # ✅ IMPLEMENTED
-│   ├── clean_cmd.py          # ✅ IMPLEMENTED (stretch)
-│   ├── idle_cmd.py           # ✅ IMPLEMENTED (stretch)
-│   └── migrate_gp3_cmd.py    # ✅ IMPLEMENTED (stretch)
+│   ├── list_cmd.py           #  IMPLEMENTED
+│   ├── cost_cmd.py           #  IMPLEMENTED
+│   ├── terminate_cmd.py      #  IMPLEMENTED
+│   ├── tag_cmd.py            #  IMPLEMENTED
+│   ├── clean_cmd.py          #  IMPLEMENTED (stretch)
+│   ├── idle_cmd.py           #  IMPLEMENTED (stretch)
+│   └── migrate_gp3_cmd.py    #  IMPLEMENTED (stretch)
 ├── tests/                    # ALL provided; ALL 25 PASS
 │   ├── conftest.py
-│   ├── test_common.py        # 10 tests ✅
-│   ├── test_list.py          # 7 tests ✅
-│   ├── test_terminate.py     # 4 tests ✅
-│   └── test_clean.py         # 4 tests ✅
+│   ├── test_common.py        # 10 tests 
+│   ├── test_list.py          # 7 tests 
+│   ├── test_terminate.py     # 4 tests 
+│   └── test_clean.py         # 4 tests 
 ├── sample_output/            # example outputs
 ├── REFLECTIONS.md            # reflection answers
 ├── Makefile
