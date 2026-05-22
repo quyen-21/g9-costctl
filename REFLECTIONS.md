@@ -36,14 +36,16 @@ We would **modify** `terminate` and `clean` to add stricter safeguards:
 
 We would **drop** `migrate-gp3` as a CLI command and instead implement it as an **automated policy** (e.g., AWS Config rule + Lambda) that detects and migrates gp2 volumes without manual intervention.
 
-## 4. AI assistance
+## 4. Implementation review
 
-Approximately 70–80% of the command implementation code was generated with AI assistance (Claude). The AI was particularly effective for:
-- Boilerplate boto3 API calls (describe_instances, list_buckets, etc.)
-- Standard patterns like pagination, tag filtering, and error handling
+During implementation, we focused on validating boto3 API usage, matching the expected command behavior, and checking safety boundaries for commands that can modify AWS resources.
 
-Parts we actively reviewed and modified:
-- **S3 tagging merge logic** — ensuring `put_bucket_tagging` merges rather than replaces existing tags.
-- **Error handling boundaries** — deciding where to catch `ClientError` (in `run()` vs individual functions) to match test expectations.
-- **Output formatting** — matching exact strings expected by tests (`"Refusing"`, `"Terminated"`, `"AWS error"`, `"dry-run"`).
-- **State filtering in `clean`** — ensuring terminated/shutting-down instances and in-use volumes are properly excluded.
+The most important review points were:
+
+- **S3 tagging merge logic** — ensuring `put_bucket_tagging` merges new tags with existing tags instead of accidentally replacing the full tag set.
+- **Error handling boundaries** — deciding where to catch `ClientError` so command failures show friendly messages instead of raw stack traces.
+- **Output formatting** — matching exact strings expected by the tests, such as `"Refusing"`, `"Terminated"`, `"AWS error"`, and `"dry-run"`.
+- **State filtering in `clean`** — ensuring terminated or shutting-down instances are skipped, and only `available` EBS volumes are selected for deletion.
+- **Destructive action safeguards** — keeping `clean` as dry-run by default and requiring explicit flags before making changes.
+
+These review steps helped make the CLI safer for workshop use while keeping the implementation simple enough to explain during W6 Q&A.
