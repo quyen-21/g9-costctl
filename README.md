@@ -1,305 +1,100 @@
-# g9-costctl — XBrain W6 side challenge
+# g9-costctl
 
-A small AWS-resource-management CLI built by Group 9 (G9) for the XBrain W6 side challenge. **All command logic has been implemented and all 25/25 tests pass.**
+A high-performance, production-grade AWS resource and cost optimization CLI tool developed by Group 9 (G9) for resource tag enforcement, idle detection, EBS volume migration, and cost governance.
 
-> **Side challenge is OPTIONAL and does NOT count toward W6 score or bonus cap.**
-> Recognition is separate (Slack callout / Phase 2 selection / portfolio).
-> See `outputs/W6/W6_downtime_exercises.md` in the XBrain program repo for
-> the full brief.
+All core features and stretch goals are fully implemented with **25/25 automated tests passing**.
 
 ---
 
-## Test Result
+## Features & Implemented Commands
 
-**Final test result: 25/25 passing.**
+The `costctl` CLI provides powerful command-line utilities across the following areas:
 
-Implemented commands:
-- ✅ `list` — List EC2/RDS/S3/Volume with tag filtering (7 tests)
-- ✅ `terminate` — Terminate/delete resources with confirmation (4 tests)
-- ✅ `tag` — Add/update tags on resources (manual verify)
-- ✅ `cost` — Cost Explorer query by tag (manual verify)
-- ✅ `clean` — Bulk terminate by tag with dry-run (4 tests)
-- ✅ `idle` — Find idle EC2 by CPU average (manual verify)
-- ✅ `migrate-gp3` — gp2 → gp3 EBS migration planner (manual verify)
+### Core Capabilities
+* **`list`**: Query and filter EC2 instances, RDS databases, S3 buckets, and EBS volumes by specific tags or missing tags.
+* **`cost`**: Query the AWS Cost Explorer API to aggregate and report historical cost metrics grouped by service for resources matching a specified tag.
+* **`tag`**: Seamlessly add or update tags on EC2, RDS, S3, or EBS volume resources.
+* **`terminate`**: Safely stop or delete a resource with confirmation checks.
 
----
-
-## What's given vs what you build
-
-| Provided (don't reinvent) | Your job |
-|---------------------------|----------|
-| `costctl.py` — argparse entrypoint, dispatch table | Implement each command's `run(args)` |
-| `commands/_common.py` — `parse_kv`, `tags_to_dict`, `tags_match`, `confirm` | Use these helpers, don't rebuild them |
-| `tests/test_common.py` — 10 unit tests for the helpers (all green) | Don't modify — they verify the helpers still work |
-| `tests/test_list.py`, `tests/test_terminate.py`, `tests/test_clean.py` — failing tests that define each command's behavior | Make them green |
-| Module docstrings in every `commands/*_cmd.py` — full spec, hints, AWS APIs to use | Read them carefully before coding |
-| `Makefile`, `requirements*.txt`, `.gitignore`, `LICENSE` | Untouched |
-| `sample_output/*.txt` | REAL outputs from running against AWS account |
-
-**Initial state of `make test`:** 10 passed (helpers), 15 failed (commands).
-You're done when all 25 pass.
+### Advanced Optimization & Governance (Stretch)
+* **`clean`**: Bulk terminate resources matching a specific tag (runs in dry-run mode by default for maximum safety).
+* **`idle`**: Scan running EC2 instances and analyze CloudWatch `CPUUtilization` metrics to discover idle resources.
+* **`migrate-gp3`**: Analyze EBS volumes and migrate cheaper/faster gp2 volumes to gp3 (with live migration, zero downtime, dry-run & apply support).
 
 ---
 
-## Quickstart (5 minutes)
+## Installation & Setup
 
+### Prerequisites
+* Python 3.11+
+* AWS credentials configured locally (`aws configure` or standard environment variables)
+
+### Installation
 ```bash
-# 1. Fork / clone
-git clone https://github.com/quyen-21/g9-costctl.git && cd g9-costctl
+# Clone the repository
+git clone https://github.com/quyen-21/g9-costctl.git
+cd g9-costctl
 
-# 2. Install
-make install-dev                   # or: pip install -r requirements-dev.txt
+# Setup virtual environment and install dependencies
+python -m venv .venv
+.venv/Scripts/activate
+pip install -r requirements.txt
 
-# 3. Confirm baseline — 10 passed, 15 failed
-make test
-
-# 4. Confirm --help works (CLI scaffolding is already wired up)
-./costctl.py --help
-
-# 5. Open commands/list_cmd.py and start implementing.
-#    The module docstring tells you what to build. Make test_list.py green.
-```
-
-Configure AWS credentials when you're ready to run against your account:
-
-```bash
-aws configure                      # or set AWS_* env vars
-./costctl.py list ec2              # lists EC2 instances (all 25/25 tests passing)
+# For development and testing dependencies
+pip install -r requirements-dev.txt
 ```
 
 ---
 
-## Implementation roadmap
+## Command Usage & Examples
 
-Recommended order. You need `list` + at least 2 of the next 3.
-
-### Required
-
-| # | File | Make pass | Time |
-|---|------|-----------|------|
-| 1 | `commands/list_cmd.py` | `pytest tests/test_list.py` (7 tests) | ~45 min |
-| 2 | Pick **at least 2** of: | | |
-|   | • `commands/cost_cmd.py` | (no test file — verify manually with `./costctl.py cost --tag X=Y --days 7` and compare to AWS Console) | ~30 min |
-|   | • `commands/terminate_cmd.py` | `pytest tests/test_terminate.py` (4 tests) | ~40 min |
-|   | • `commands/tag_cmd.py` | (no test — verify with `tag` + `list` roundtrip) | ~30 min |
-
-### Stretch (optional — extra portfolio value)
-
-| File | Make pass | Time |
-|------|-----------|------|
-| `commands/clean_cmd.py` | `pytest tests/test_clean.py` (4 tests) | ~30 min |
-| `commands/idle_cmd.py` | (no test — verify manually) | ~45 min |
-| `commands/migrate_gp3_cmd.py` | (no test — verify manually, then run `--apply` once for real) | ~30 min |
-
-### How to read a stub
-
-Every `commands/*_cmd.py` starts with a module docstring that includes:
-
-- **WHAT YOU MUST BUILD** — high-level behavior
-- **HELPERS YOU CAN USE** — point to `commands/_common.py`
-- **AWS APIS YOU'LL NEED** — exact boto3 calls
-- **EXPECTED OUTPUT FORMAT** — copy this exactly when you `print(...)`
-- **VERIFY** — pytest command or manual recipe
-
-Don't skip the docstring and jump to `raise NotImplementedError`. The docstring
-is your spec.
-
----
-
-## Commands (final shape after you implement)
-
-| Command | What it does | Tier |
-|---------|--------------|------|
-| `list <type>` | List EC2/RDS/S3/Volume, filter by tag or missing-tag | core |
-| `cost --tag k=v` | Sum cost over N days for resources matching a tag | core |
-| `terminate <type> --id` | Terminate/delete one resource (asks confirmation) | core |
-| `tag <type> --id --set` | Add/update tags on one resource | core |
-| `clean --tag k=v` | Bulk terminate resources by tag (dry-run by default) | stretch |
-| `idle` | Find idle EC2 by 24h CPU avg | stretch |
-| `migrate-gp3` | Plan or apply gp2 → gp3 EBS migration | stretch |
-
-Resource types: `ec2`, `rds`, `s3`, `volume`.
-
-### Example invocations (after implementing)
+Every command supports standard options including `--region` to override the default AWS region.
 
 ```bash
-# List
+# List EC2 instances with specific environment tags
 ./costctl.py list ec2 --tag Environment=dev
-./costctl.py list ec2 --missing-tag Application
-./costctl.py list s3
 
-# Cost (data lags 8–24h; if "no cost data", try larger --days)
+# List volumes missing an Application tag
+./costctl.py list volume --missing-tag Application
+
+# Calculate cost of Merxly application resources over the last 7 days
 ./costctl.py cost --tag Application=Merxly --days 7
 
-# Terminate (asks y/N)
-./costctl.py terminate ec2 --id i-0abc123
-./costctl.py terminate ec2 --id i-0abc123 --force
+# Tag an EC2 instance with Owner and Application metadata
+./costctl.py tag ec2 --id i-0abc123456789def0 --set Owner=G9 --set Application=Merxly
 
-# Tag
-./costctl.py tag ec2 --id i-0abc --set Owner=alice --set Application=Merxly
+# Identify idle EC2 instances with CPU utilization below 5% over 24 hours
+./costctl.py idle --threshold 5.0 --hours 24
 
-# One-liner: fix one missing-tag resource
-./costctl.py tag ec2 \
-  --id $(./costctl.py list ec2 --missing-tag Application | awk 'NR==4{print $1}') \
-  --set Application=Merxly
-
-# Stretch
-./costctl.py clean --tag purpose=practice          # dry-run
-./costctl.py clean --tag purpose=practice --apply
-./costctl.py idle --threshold 5 --hours 24
+# Perform a dry-run migration check of gp2 volumes to gp3
 ./costctl.py migrate-gp3
-./costctl.py migrate-gp3 --apply --volume-id vol-0xyz
+
+# Apply the live, zero-downtime gp3 migration for all gp2 volumes
+./costctl.py migrate-gp3 --apply
 ```
 
 ---
 
-## Requirements
+## Testing
 
-- Python 3.11+
-- `boto3` (via `make install`)
-- AWS credentials with:
-  - **Read**: EC2, RDS, S3, CloudWatch, Cost Explorer
-  - **Write** (only for `terminate`/`tag`/`clean`/`migrate-gp3`): EC2, RDS, S3
+The test suite leverages `pytest` and `moto` to simulate AWS services locally, ensuring full reliability without calling live AWS APIs.
 
-For tests:
-- `moto`, `pytest`, `pytest-cov` (via `make install-dev`)
-
----
-
-## Project structure
-
-```
-g9-costctl/
-├── costctl.py                # argparse entrypoint (provided)
-├── commands/
-│   ├── _common.py            # helpers — IMPLEMENTED, leave alone
-│   ├── list_cmd.py           # ✅ IMPLEMENTED
-│   ├── cost_cmd.py           # ✅ IMPLEMENTED
-│   ├── terminate_cmd.py      # ✅ IMPLEMENTED
-│   ├── tag_cmd.py            # ✅ IMPLEMENTED
-│   ├── clean_cmd.py          # ✅ IMPLEMENTED (stretch)
-│   ├── idle_cmd.py           # ✅ IMPLEMENTED (stretch)
-│   └── migrate_gp3_cmd.py    # ✅ IMPLEMENTED (stretch)
-├── tests/                    # ALL provided; ALL 25 PASS
-│   ├── conftest.py
-│   ├── test_common.py        # 10 tests ✅
-│   ├── test_list.py          # 7 tests ✅
-│   ├── test_terminate.py     # 4 tests ✅
-│   └── test_clean.py         # 4 tests ✅
-├── sample_output/            # example outputs
-├── REFLECTIONS.md            # reflection answers
-├── Makefile
-├── requirements.txt
-├── requirements-dev.txt
-├── LICENSE
-└── README.md (this file)
-```
-
----
-
-## TDD loop
-
+To execute the test suite:
 ```bash
-# 1. Pick a failing test
-pytest tests/test_list.py::test_list_ec2_empty -v
-
-# 2. Open commands/list_cmd.py, find the function it references (_list_ec2)
-# 3. Implement just enough to make THAT test pass
-# 4. Re-run — green?
-pytest tests/test_list.py::test_list_ec2_empty -v
-
-# 5. Move to the next test in the file
-pytest tests/test_list.py::test_list_ec2_no_filter_returns_all -v
-
-# Repeat. When all tests in the file pass, that command is done.
+pytest -v tests/
 ```
 
-The provided tests use [moto](https://github.com/getmoto/moto) — no real AWS
-calls, no charges, runs in seconds.
+Result: **25/25 passing tests**
 
 ---
 
-## How to extend — add a new command
+## Operational Reflections & Review
 
-Say you want a `snapshot` command that creates an EBS snapshot.
-
-**1.** Create `commands/snapshot_cmd.py`:
-
-```python
-"""snapshot — create an EBS snapshot of one volume."""
-import boto3
-
-def run(args):
-    ec2 = boto3.client("ec2")
-    resp = ec2.create_snapshot(
-        VolumeId=args.volume_id,
-        Description=f"costctl backup of {args.volume_id}",
-    )
-    print(f"Created snapshot {resp['SnapshotId']} (state: {resp['State']})")
-```
-
-**2.** Add parser block in `costctl.py` `build_parser()`:
-
-```python
-sn = sub.add_parser("snapshot", help="snapshot an EBS volume")
-sn.add_argument("--volume-id", required=True)
-```
-
-**3.** Register in `CMD_MODULE`:
-
-```python
-CMD_MODULE = {
-    ...,
-    "snapshot": "snapshot_cmd",
-}
-```
-
-Run:
-
-```bash
-./costctl.py snapshot --volume-id vol-0xyz
-```
-
-Add `tests/test_snapshot.py` mirroring `test_list.py`. Moto supports
-`create_snapshot` out of the box.
-
----
-
-## Reflections
-
-See `REFLECTIONS.md` for operational review and lessons learned, including:
-
+Refer to [REFLECTIONS.md](file:///e:/code/REFLECTIONS.md) for an in-depth operational review and engineering lessons learned, covering:
 1. **Cleanup blast-radius control** — safety measures to limit accidental damage
 2. **Idle-resource detection vs Trusted Advisor** — when to use each approach
 3. **W7 carry-over** — which commands should continue into multi-account operations
 4. **Implementation review** — validation notes and improvement decisions
-
----
-
-## Submission checklist (W6 side challenge)
-
-- [x] Fork → rename to `g9-costctl` → clone locally
-- [x] `make install-dev && make test` shows 10 passed at start
-- [x] Implement `list` → `pytest tests/test_list.py` all green (7 more pass)
-- [x] Implement ≥ 2 of (`cost`, `terminate`, `tag`) — all 3 implemented
-- [x] (optional stretch) `clean` → `pytest tests/test_clean.py` green; `idle` and `migrate-gp3` also implemented
-- [x] `make test` final score reported in README: **25/25 passing**
-- [x] Generate REAL outputs from your account in `sample_output/*.txt`
-- [x] `REFLECTIONS.md` with 4 answers
-- [x] At least 3 meaningful commits (init → first command working → final polish)
-- [x] Replace `g<N>` placeholders throughout README with G9
-- [x] Add Team section with member names
-- [x] Tag: `git tag w6-sidechallenge-v2 && git push --tags`
-- [x] Post link in Slack `#w6-sidechallenge` thread
-
-Reminder: **OPTIONAL and does NOT count toward W6 score.** Recognition is
-separate (Slack callout / Phase 2 selection / portfolio).
-
----
-
-## License
-
-MIT — see `LICENSE`.
 
 ---
 
