@@ -265,14 +265,14 @@ Add `tests/test_snapshot.py` mirroring `test_list.py`. Moto supports
 
 ---
 
-## Reflections (paste 2+ before submission)
+## Reflections
 
-See `REFLECTIONS.md` for detailed answers covering:
+See `REFLECTIONS.md` for operational review and lessons learned, including:
 
-1. **`clean --apply` blast radius** — safety measures to limit damage
-2. **`idle` vs Trusted Advisor** — when to trust each tool
-3. **W7 carry-over** — which commands to keep for multi-account
-4. **AI assistance** — what fraction was AI-generated and what was modified
+1. **Cleanup blast-radius control** — safety measures to limit accidental damage
+2. **Idle-resource detection vs Trusted Advisor** — when to use each approach
+3. **W7 carry-over** — which commands should continue into multi-account operations
+4. **Implementation review** — validation notes and improvement decisions
 
 ---
 
